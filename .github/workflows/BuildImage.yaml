@@ -24,17 +24,6 @@ jobs:
           cache: 'maven'
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-
-      - name: Build Project
-        run: |
-          mvn package -Dquarkus.container-image.build=true -Dquarkus.package.type=native -Dquarkus.native.container-build=true -Dquarkus.container-image.tag=legacy
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-
-      - name: Set up Docker BuildX
-        uses: docker/setup-buildx-action@v2
-
       - name: Log in to Quay.io
         uses: redhat-actions/podman-login@v1
         with:
@@ -42,15 +31,35 @@ jobs:
           password: ${{ secrets.QUAY_ROBOT_TOKEN }}
           registry: ${{ env.DOCKER_REGISTRY }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v4
+      - name: Build ARM image
+        uses: docker/build-push-action@v3
         with:
-          context: .
-          file: src/main/docker/Dockerfile.native
-          platforms: |
-            linux/amd64
-            linux/arm64
-          push: true
-          tags: |
-            ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}:latest
-            ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}:1.0.0
+            registry: quay.io
+            platforms: linux/arm64
+            context: .
+            file: src/main/docker/Dockerfile.native
+            push: false
+            tags: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}:${{ github.sha }}-arm
+            build-args: |
+              image=${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}:${{ github.sha }}-amd
+
+
+
+      - name: Push multi-arch images and manifest to QUAY Registry
+        run: |
+            if [ "$GITHUB_REF_NAME" = "main" ]
+            then
+              TAG=latest
+            elif [[ $GITHUB_REF_NAME =~ (eahw-[0-9]*) ]]
+            then
+              TAG=${match/#E/E}${BASH_REMATCH/#E/E}
+            else
+              TAG=${GITHUB_SHA}
+            fi
+            docker tag ${DOCKER_REGISTRY}/${DOCKER_REPO}:${GITHUB_SHA}-amd ${DOCKER_REGISTRY}/${DOCKER_REPO}:${GITHUB_SHA}-amd
+            docker tag ${DOCKER_REGISTRY}/${DOCKER_REPO}:${GITHUB_SHA}-arm ${DOCKER_REGISTRY}/${DOCKER_REPO}:${GITHUB_SHA}-arm
+            docker image push --all-tags ${DOCKER_REGISTRY}/${DOCKER_REPO}
+            docker manifest create ${DOCKER_REGISTRY}/${DOCKER_REPO}:${TAG} --amend ${DOCKER_REGISTRY}/${DOCKER_REPO}:${GITHUB_SHA}-amd --amend ${DOCKER_REGISTRY}/${DOCKER_REPO}:${GITHUB_SHA}-arm
+            docker manifest push ${DOCKER_REGISTRY}/${DOCKER_REPO}:${TAG}
+
+
