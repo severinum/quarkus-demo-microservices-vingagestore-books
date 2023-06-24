@@ -24,6 +24,10 @@ jobs:
           cache: 'maven'
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Build Project
+          run: |
+            mvn verify -Dquarkus.package.type=native -DskipTests
+
       - name: Log in to Quay.io
         uses: redhat-actions/podman-login@v1
         with:
