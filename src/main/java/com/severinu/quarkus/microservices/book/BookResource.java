@@ -4,24 +4,30 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+
+import java.time.LocalDate;
 
 @Slf4j
 @Path("/api/books")
+@Tag(name = "Book REST Endpoint")
 public class BookResource {
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    //@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Consumes(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Creates a new book", description = "Book with ISBN from Numbers API")
     public Response createBook(Book bookParam) {
-        log.info("Creating new book: {}", bookParam);
         Book book = new Book();
         book.setIsbn("Get from Number API");
         book.setTitle(bookParam.getTitle());
         book.setAuthor(bookParam.getAuthor());
-        book.setYear(bookParam.getYear());
+        book.setPublicationYear(bookParam.getPublicationYear());
+        book.setCreationDate(LocalDate.now());
         book.setGenre(bookParam.getGenre());
 
+        log.info("Creating new book: {}", book);
         return Response.status(201).entity(book).build();
     }
 
