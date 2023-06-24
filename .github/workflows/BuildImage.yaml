@@ -61,3 +61,17 @@ jobs:
             ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}:latest
             ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}:1.0.0
             ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}:${{ github.sha }}
+
+      - name: Build and push with tags
+        run: |
+          if [ "$GITHUB_REF_NAME" = "main" ]
+          then
+            TAG=latest
+          elif [[ $GITHUB_REF_NAME =~ (eahw-[0-9]*) ]]
+          then
+            TAG=${match/#E/E}${BASH_REMATCH/#E/E}
+          else
+            TAG=${GITHUB_SHA}
+          fi
+          docker manifest create ${DOCKER_REGISTRY}/${DOCKER_REPO}:${TAG} --amend ${DOCKER_REGISTRY}/${DOCKER_REPO}:${GITHUB_SHA}-amd --amend ${DOCKER_REGISTRY}/${DOCKER_REPO}:${GITHUB_SHA}-arm
+          docker manifest push ${DOCKER_REGISTRY}/${DOCKER_REPO}:${TAG}
