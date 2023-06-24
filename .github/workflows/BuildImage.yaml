@@ -4,6 +4,7 @@ on:
     branches:
       - main
       - master
+      - "**ticket-**"
 
 jobs:
   build-image:
@@ -11,6 +12,7 @@ jobs:
     env:
       DOCKER_REGISTRY: quay.io/sewerynmi
       DOCKER_REPO: quarkus-microservices-vintagestore-books
+      IMAGE_TAG: default
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -26,7 +28,7 @@ jobs:
 
       - name: Build Project
         run: |
-            mvn package -Dquarkus.package.type=jar
+          mvn package -Dquarkus.package.type=jar
 
       - name: Log in to Quay.io
         uses: redhat-actions/podman-login@v1
@@ -48,6 +50,19 @@ jobs:
           password: ${{ secrets.QUAY_ROBOT_TOKEN }}
           registry: ${{ env.DOCKER_REGISTRY }}
 
+      - name: Create TAGS
+        run: |
+          if [ "$GITHUB_REF_NAME" = "master" ]
+          then
+            TAG=latest
+          elif [[ $GITHUB_REF_NAME =~ (ticket-[0-9]*) ]]
+          then
+            TAG=${match/#E/E}${BASH_REMATCH/#E/E}
+          else
+            TAG=${GITHUB_SHA}
+          fi
+          echo "IMAGE_TAG=$TAG" >> $GITHUB_ENV
+
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
@@ -58,20 +73,5 @@ jobs:
             linux/arm64
           push: true
           tags: |
-            ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}:latest
-            ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}:1.0.0
             ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}:${{ github.sha }}
-
-      - name: Build and push with tags
-        run: |
-          if [ "$GITHUB_REF_NAME" = "main" ]
-          then
-            TAG=latest
-          elif [[ $GITHUB_REF_NAME =~ (eahw-[0-9]*) ]]
-          then
-            TAG=${match/#E/E}${BASH_REMATCH/#E/E}
-          else
-            TAG=${GITHUB_SHA}
-          fi
-          docker manifest create ${DOCKER_REGISTRY}/${DOCKER_REPO}:${TAG} --amend ${DOCKER_REGISTRY}/${DOCKER_REPO}:${GITHUB_SHA}-amd --amend ${DOCKER_REGISTRY}/${DOCKER_REPO}:${GITHUB_SHA}-arm
-          docker manifest push ${DOCKER_REGISTRY}/${DOCKER_REPO}:${TAG}
+            ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}:${{ env.IMAGE_TAG }}
