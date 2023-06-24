@@ -30,13 +30,6 @@ jobs:
         run: |
           mvn package -Dquarkus.package.type=legacy-jar
 
-      - name: Log in to Quay.io
-        uses: redhat-actions/podman-login@v1
-        with:
-          username: ${{ secrets.QUAY_ROBOT_NAME }}
-          password: ${{ secrets.QUAY_ROBOT_TOKEN }}
-          registry: ${{ env.DOCKER_REGISTRY }}
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
