@@ -60,3 +60,4 @@ jobs:
           tags: |
             ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}:latest
             ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}:1.0.0
+            ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}:${{ github.sha }}
