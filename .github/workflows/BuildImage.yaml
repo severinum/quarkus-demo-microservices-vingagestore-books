@@ -28,3 +28,29 @@ jobs:
       - name: Build Project
         run: |
           mvn package -Dquarkus.container-image.build=true -Dquarkus.package.type=native -Dquarkus.native.container-build=true -Dquarkus.container-image.tag=legacy
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker BuildX
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Quay.io
+        uses: redhat-actions/podman-login@v1
+        with:
+          username: ${{ secrets.QUAY_ROBOT_NAME }}
+          password: ${{ secrets.QUAY_ROBOT_TOKEN }}
+          registry: ${{ env.DOCKER_REGISTRY }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: src/main/docker/Dockerfile.native
+          platforms: |
+            linux/amd64
+            linux/arm64
+          push: true
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_USERNAME }}/vintagestore-books-service:latest
+            ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_USERNAME }}/vintagestore-books-service:1.0.0

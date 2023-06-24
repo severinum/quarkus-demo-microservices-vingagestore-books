@@ -12,17 +12,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @QuarkusTest
 public class BookResourceTest {
 
-    @Test
-    public void should_createABook() {
-
-//        String requestBody = """
+    //@TestString requestBody = """
 //        {
 //            "title": "Book 01",
 //            "author": "John Doe",
 //            "genre": "IT",
 //            "publication_year": 1980
 //        }""";
-//
+    //
 //
 //        Response response = given()
 //                    .header("Content-type", "application/json")
@@ -37,6 +34,9 @@ public class BookResourceTest {
 //        assertEquals("IT", response.jsonPath().getString("genre"));
 //        assertEquals("1980", response.jsonPath().getString("publication_year"));
 //        assertEquals(LocalDate.now().toString(), response.jsonPath().getString("creation_date"));
+    public void should_createABook() {
+
+//
     }
 
 }
