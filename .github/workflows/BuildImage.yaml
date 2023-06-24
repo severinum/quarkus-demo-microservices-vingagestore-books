@@ -28,7 +28,7 @@ jobs:
 
       - name: Build Project
         run: |
-          mvn package -Dquarkus.package.type=jar
+          mvn package -Dquarkus.package.type=native
 
       - name: Log in to Quay.io
         uses: redhat-actions/podman-login@v1
@@ -67,7 +67,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          file: src/main/docker/Dockerfile.jvm
+          file: src/main/docker/Dockerfile.native
           platforms: |
             linux/amd64
             linux/arm64
