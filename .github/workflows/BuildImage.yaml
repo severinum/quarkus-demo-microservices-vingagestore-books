@@ -26,7 +26,7 @@ jobs:
 
       - name: Build Project
         run: |
-            mvn verify -Dquarkus.package.type=native -DskipTests
+            mvn package -Dquarkus.package.type=jar
 
       - name: Log in to Quay.io
         uses: redhat-actions/podman-login@v1
@@ -41,7 +41,7 @@ jobs:
             registry: quay.io
             platforms: linux/arm64
             context: .
-            file: src/main/docker/Dockerfile.native
+            file: src/main/docker/Dockerfile.jvm
             push: false
             tags: ${{ env.DOCKER_REGISTRY }}/${{ env.DOCKER_REPO }}:${{ github.sha }}-arm
             build-args: |
